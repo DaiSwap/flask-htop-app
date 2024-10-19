@@ -1,34 +1,39 @@
-from flask import Flask
-import os
+from flask import Flask, render_template_string
 import subprocess
+import getpass
 from datetime import datetime
 import pytz
 
 app = Flask(_name_)
 
-@app.route('/htop')
+@app.route('/')
 def htop():
-    # Full name
-    full_name = "Your Full Name"
-
-    # Username (system username)
-    username = os.getlogin()
-
-    # Server Time in IST
-    ist = pytz.timezone('Asia/Kolkata')
-    server_time = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S %Z')
-
-    # top command output
-    top_output = subprocess.getoutput('top -bn1')
-
-    # HTML Output
-    return f"""
-    <h1>HTOP Information</h1>
-    <p><strong>Name:</strong> {full_name}</p>
-    <p><strong>Username:</strong> {username}</p>
-    <p><strong>Server Time (IST):</strong> {server_time}</p>
-    <pre>{top_output}</pre>
+    full_name = "Pranav Venkatesh"
+    
+    username = getpass.getuser()
+    
+    ist_time = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M:%S %Z')
+    
+    top_output = subprocess.check_output(['top', '-b', '-n', '1']).decode('utf-8')
+    
+    html_template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>HTOP Information</title>
+    </head>
+    <body>
+        <h1>HTOP Information</h1>
+        <p><strong>Name:</strong> {{ full_name }}</p>
+        <p><strong>Username:</strong> {{ username }}</p>
+        <p><strong>Server Time (IST):</strong> {{ ist_time }}</p>
+        <h2>Top Output:</h2>
+        <pre>{{ top_output }}</pre>
+    </body>
+    </html>
     """
+    
+    return render_template_string(html_template, full_name=full_name, username=username, ist_time=ist_time, top_output=top_output)
 
 if _name_ == '_main_':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=5000)
